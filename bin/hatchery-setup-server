@@ -1,0 +1,84 @@
+#!/usr/bin/env sh
+
+# configuration for hatchery development box
+# @author: Dana Spiegel <dana@sociabledesign.com>
+
+safe() { "$@" || barf "cannot: $*; aborting"; }
+barf() { shout "$*"; exit 111; }
+shout() { echo "${0##*/}: $*" >&2; }
+
+# some default settings
+OLD_DIR=`pwd`
+DB_SERVER=
+RUN_DIR="/var/run/hatchery"
+
+usage() { shout "usage: $0 [[[-d dbserver] [-r rundir]] | [-h]]"; exit 0; }
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -d | --dbserver )
+            shift
+            USER=`dig +short $1`
+            ;;
+        -r | --rundir )
+            shift
+            PORT=$1
+            ;;
+        -h | --help )
+            usage
+            ;;
+        * )
+            usage
+    esac
+    shift
+done
+
+[ "$RUN_DIR" ] || usage
+[ "$DB_SERVER" ] || usage
+
+# configure environment profile for all users
+# setup hosts
+safe echo "$DB_SERVER hatcherydb" | sudo tee /etc/hosts > /dev/null
+
+# setup profile
+safe echo "parse_git_branch() {
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+
+PS1=\"${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$(parse_git_branch)$ \"
+
+export HISTIGNORE=\"&:ls:[bf]g:exit\"
+export HISTFILESIZE=10000
+export HISTCONTROL=erasedups
+export PROMPT_COMMAND=\"history -a; $PROMPT_COMMAND\"
+
+export DB_SERVER=$DB_SERVER
+export DJANGO_SOCKET=/var/run/hatchery/$USER
+alias runserver=\"./manage.py runfcgi socket=$DJANGO_SOCKET umask=0002 method=prefork daemonize=false\"
+" | sudo tee -a /etc/profile.d/environment.sh > /dev/null
+
+safe sudo -s chmod a+x /etc/profile.d/environment.sh
+safe . /etc/profile.d/environment.sh
+
+# update software installed on box
+safe sudo aptitude update
+safe sudo aptitude upgrade
+safe sudo aptitude install git subversion emacs23-nox nginx python-flup ipython mysql-client
+
+# install django
+safe curl --location --output django-1.4.1.tar.gz https://www.djangoproject.com/download/1.4.1/tarball/ 
+safe tar zxvf django-1.4.1.tar.gz 
+safe cd Django-1.4.1/
+safe sudo python setup.py install
+safe cd ..
+safe sudo rm -rf Django-1.4.1/
+safe sudo rm -rf django-1.4.1.tar.gz
+safe cd $OLD_DIR
+
+# setup fcgi socket run directory
+if [ -d $RUN_DIR ]; then
+    safe sudo rm -rf $RUN_DIR
+fi
+safe sudo mkdir $RUN_DIR
+safe sudo chmod a+rwxs $RUN_DIR
+safe sudo chgrp www-data $RUN_DIR

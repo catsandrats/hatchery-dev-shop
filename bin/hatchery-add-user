@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+# creates a user with a default django project on a given port
+# @author: Dana Spiegel <dana@sociabledesign.com>
+
+safe() { "$@" || barf "cannot: $*; aborting"; }
+barf() { shout "$*"; exit 111; }
+shout() { echo "${0##*/}: $*" >&2; }
+
+usage() { shout "usage: $0 [[[-u username] [-p port]] | [-h]]"; exit 0; }
+
+OLDDIR=`pwd`
+USER=
+PORT=
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -u | --user )
+            shift
+            USER=$1
+            ;;
+        -p | --port )
+            shift
+            PORT=$1
+            ;;
+        -h | --help )
+            usage
+            ;;
+        * )
+            usage
+    esac
+    shift
+done
+
+[ "$USER" ] || usage
+[ "$PORT" ] || usage
+
+# create the user
+id $USER > /dev/null 2>&1
+[ $? = 0 ] && barf "User $USER already exists"
+safe sudo adduser --disabled-password --ingroup hatchery $USER
+
+# create the django project
+cd /home/$USER
+safe sudo -u $USER env django-admin.py startproject project
+cd $OLDDIR
+
+# execute nginx-config
+safe ./hatchery-add-site -u $USER -p $PORT
