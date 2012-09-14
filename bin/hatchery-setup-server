@@ -18,11 +18,11 @@ while [ "$1" != "" ]; do
     case $1 in
         -d | --dbserver )
             shift
-            USER=`dig +short $1 | tac | awk 'NR > 1 { exit } ; 1'`
+            DB_SERVER=`dig +short $1 | tac | awk 'NR > 1 { exit } ; 1'`
             ;;
         -r | --rundir )
             shift
-            PORT=$1
+            RUN_DIR=$1
             ;;
         -h | --help )
             usage
