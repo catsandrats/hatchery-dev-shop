@@ -7,24 +7,27 @@ safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
 shout() { echo "${0##*/}: $*" >&2; }
 
-usage() { barf "usage: $0 [[[-u username] [-p port]] | [-h]]"; }
+USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
 USER=
 PORT=
 
 while [ "$1" != "" ]; do
     case $1 in
-        -u | --user )           shift
-                                USER=$1
-                                ;;
-        -p | --port )    		shift
-                                PORT=$1
-                                ;;
-        -h | --help )           usage
-                                exit
-                                ;;
-        * )                     usage
-                                exit 1
+        -u | --user )
+            shift
+            USER=$1
+            ;;
+        -p | --port )
+            shift
+            PORT=$1
+            ;;
+        -h | --help )
+            shout $USAGE
+            exit 0
+            ;;
+        * )
+            barf $USAGE
     esac
     shift
 done

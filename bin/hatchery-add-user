@@ -7,7 +7,7 @@ safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
 shout() { echo "${0##*/}: $*" >&2; }
 
-usage() { shout "usage: $0 [[[-u username] [-p port]] | [-h]]"; exit 0; }
+USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
 OLDDIR=`pwd`
 USER=
@@ -24,10 +24,11 @@ while [ "$1" != "" ]; do
             PORT=$1
             ;;
         -h | --help )
-            usage
+            shout $USAGE
+            exit 0
             ;;
         * )
-            usage
+            barf $USAGE
     esac
     shift
 done
@@ -47,3 +48,5 @@ cd $OLDDIR
 
 # execute nginx-config
 safe ./hatchery-add-site -u $USER -p $PORT
+
+# add port to profile for user
