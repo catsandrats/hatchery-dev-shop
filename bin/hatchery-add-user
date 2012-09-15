@@ -45,13 +45,7 @@ safe sudo adduser --disabled-password --ingroup hatchery $USER
 SECRET_KEY=`python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*(-_=+)") for i in range(50)])'`
 safe cd /home/$USER
 safe sudo -u $USER env django-admin.py startproject project
-safe sudo -u $USER mkdir project/
-safe cd project
-safe mkdir /home/$USER/project/media
-safe mkdir /home/$USER/project/static
-safe mkdir /home/$USER/project/templates
-safe sudo -u $USER python manage.py syncdb --noinput
-safe cd project
+safe cd project/project
 safe echo "
 from django.conf.urls import patterns, include, url
 from django.views.generic.simple import direct_to_template
@@ -164,6 +158,11 @@ LOGGING = {
     }
 }
 " | tee settings.py > /dev/null
+cd ..
+safe sudo -u $USER mkdir /home/$USER/project/media
+safe sudo -u $USER mkdir /home/$USER/project/static
+safe sudo -u $USER mkdir /home/$USER/project/templates
+safe sudo -u $USER python manage.py syncdb --noinput
 shout "Created project in /home/$USER/project/ with sqlite database"
 shout "Be sure to run python manage.py createsuperuser to create a new superuser for the project"
 safe cd $OLDDIR
