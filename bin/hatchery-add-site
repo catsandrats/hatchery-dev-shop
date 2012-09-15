@@ -9,6 +9,9 @@ shout() { echo "${0##*/}: $*" >&2; }
 
 USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
+SCRIPT=`readlink -f $0`
+SCRIPTPATH=`dirname $SCRIPT`
+
 USERNAME=
 PORT=
 
@@ -35,35 +38,9 @@ done
 [ "$USERNAME" ] || usage
 [ "$PORT" ] || usage
 
-safe echo "server {
-    listen $PORT;
-    access_log /var/log/nginx/hatchery.$USERNAME.access.log;
-    error_log /var/log/nginx/hatchery.$USERNAME.error.log;
-
-    # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-production
-    location /static/ { # STATIC_URL
-        alias /home/$USERNAME/project/static/; # STATIC_ROOT
-        expires 1d;
-    }
-
-    location /static/admin/ {
-        alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin/;
-        expires 30d;
-    }
-
-    location /media/ { # MEDIA_URL
-        alias /home/$USERNAME/project/media/; # MEDIA_ROOT
-        expires 1d;
-    }
-
-    location / {
-        include fastcgi_params;
-        fastcgi_split_path_info ^()(.*)$;
-        fastcgi_pass unix:/var/run/hatchery/$USERNAME;
-    }
-}
-" | sudo tee /etc/nginx/sites-available/$USERNAME > /dev/null
-
+safe sudo cp $SCRIPTPATH/../etc/nginx/site /etc/nginx/sites-available/$USERNAME
+safe sudo sed -i 's/REPLACE_USERNAME/$USERNAME/g' /etc/nginx/sites-available/$USERNAME
+safe sudo sed -i 's/REPLACE_PORT/$PORT/g' /etc/nginx/sites-available/$USERNAME
 
 FILENAME="/etc/nginx/sites-enabled/$USERNAME"
 

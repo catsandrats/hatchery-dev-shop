@@ -1,0 +1,27 @@
+server {
+    listen REPLACE_PORT;
+    access_log /var/log/nginx/hatchery.REPLACE_USERNAME.access.log;
+    error_log /var/log/nginx/hatchery.REPLACE_USERNAME.error.log;
+
+    # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-production
+    location /static/ {
+        alias /home/REPLACE_USERNAME/project/static/;
+        expires 1d;
+    }
+
+    location /static/admin/ {
+        alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin/;
+        expires 30d;
+    }
+
+    location /media/ {
+        alias /home/REPLACE_USERNAME/project/media/;
+        expires 1d;
+    }
+
+    location / {
+        include fastcgi_params;
+        fastcgi_split_path_info ^()(.*)$;
+        fastcgi_pass unix:/var/run/hatchery/REPLACE_USERNAME;
+    }
+}
