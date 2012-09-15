@@ -59,3 +59,7 @@ fi
 safe sudo mkdir $RUN_DIR
 safe sudo chmod a+rwxs $RUN_DIR
 safe sudo chgrp www-data $RUN_DIR
+
+# remove default nginx config
+safe sudo rm /etc/nginx/sites-enabled/default
+safe sudo service nginx restart

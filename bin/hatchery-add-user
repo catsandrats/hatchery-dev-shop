@@ -7,7 +7,7 @@ safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
 shout() { echo "${0##*/}: $*" >&2; }
 
-USAGE="$0 [[[-u username] [-p port]] | [-h]]"
+USAGE="$0 [[[-f] [-u username] [-p port]] | [-h]]"
 
 SCRIPT=`readlink -f $0`
 SCRIPTPATH=`dirname $SCRIPT`
@@ -15,6 +15,7 @@ SCRIPTPATH=`dirname $SCRIPT`
 OLDDIR=`pwd`
 USER=
 PORT=
+FORCE=
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -26,6 +27,9 @@ while [ "$1" != "" ]; do
             shift
             PORT=$1
             ;;
+        -f | --force )
+            FORCE=1
+            ;;
         -h | --help )
             shout $USAGE
             exit 0
@@ -36,13 +40,18 @@ while [ "$1" != "" ]; do
     shift
 done
 
-[ "$USER" ] || usage
-[ "$PORT" ] || usage
+[ "$USER" ] || barf $USAGE
+[ "$PORT" ] || barf $USAGE
 
 # create the user
 id $USER > /dev/null 2>&1
-[ $? = 0 ] && barf "User $USER already exists"
-safe sudo adduser --disabled-password --ingroup hatchery $USER
+if [ $? ]; then
+    if [ ! $FORCE ]; then
+        barf "User $USER already exists"
+    fi
+else
+    safe sudo adduser --disabled-password --ingroup hatchery $USER
+fi
 
 PROJECT_DIR=/home/$USER/project
 
