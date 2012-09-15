@@ -47,15 +47,16 @@ safe sudo adduser --disabled-password --ingroup hatchery $USER
 PROJECT_DIR=/home/$USER/project
 
 # create the django project
-SECRET_KEY=`python -c "import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*(-_=+)") for i in range(50)])"`
+SECRET_KEY=`python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*(-_=+)") for i in range(50)])'`
 safe cd /home/$USER
 safe sudo -u $USER env django-admin.py startproject project
 safe sudo -u $USER cp $SCRIPTPATH/../etc/project/urls.py $PROJECT_DIR/project/urls.py
 safe sudo -u $USER cp $SCRIPTPATH/../etc/project/settings.py $PROJECT_DIR/project/settings.py
-safe sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/g" $PROJECT_DIR/project/settings.py
+safe sudo sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/g" $PROJECT_DIR/project/settings.py
 safe sudo -u $USER mkdir $PROJECT_DIR/media
 safe sudo -u $USER mkdir $PROJECT_DIR/static
 safe sudo -u $USER mkdir $PROJECT_DIR/templates
+safe cd /home/$USER/project
 safe sudo -u $USER python manage.py syncdb --noinput 2>&1 > /dev/null
 safe cd $OLDDIR
 

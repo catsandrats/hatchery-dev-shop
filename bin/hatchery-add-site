@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # creates an nginx configuration for a user on a specified port
-# @author: Dana Spiegel <dana@sociabledesign.com>
+# @aUthor: Dana Spiegel <dana@sociabledesign.com>
 
 safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
