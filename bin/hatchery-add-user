@@ -165,7 +165,7 @@ cd ..
 safe sudo -u $USER mkdir /home/$USER/project/media
 safe sudo -u $USER mkdir /home/$USER/project/static
 safe sudo -u $USER mkdir /home/$USER/project/templates
-safe sudo -u $USER python manage.py syncdb --noinput > /dev/null
+safe sudo -u $USER python manage.py syncdb --noinput 2>&1 > /dev/null
 shout "Created project in /home/$USER/project/ with sqlite database"
 shout "Be sure to run python manage.py createsuperuser to create a new superuser for the project"
 safe cd $OLDDIR
