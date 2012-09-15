@@ -9,6 +9,9 @@ shout() { echo "${0##*/}: $*" >&2; }
 
 USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
+SCRIPT=`readlink -f $0`
+SCRIPTPATH=`dirname $SCRIPT`
+
 OLDDIR=`pwd`
 USER=
 PORT=
@@ -162,12 +165,12 @@ cd ..
 safe sudo -u $USER mkdir /home/$USER/project/media
 safe sudo -u $USER mkdir /home/$USER/project/static
 safe sudo -u $USER mkdir /home/$USER/project/templates
-safe sudo -u $USER python manage.py syncdb --noinput
+safe sudo -u $USER python manage.py syncdb --noinput > /dev/null
 shout "Created project in /home/$USER/project/ with sqlite database"
 shout "Be sure to run python manage.py createsuperuser to create a new superuser for the project"
 safe cd $OLDDIR
 
 # execute nginx-config
-safe ./hatchery-add-site -u $USER -p $PORT
+safe $SCRIPTPATH/hatchery-add-site -u $USER -p $PORT
 
 # add port to profile for user
