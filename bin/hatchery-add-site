@@ -9,14 +9,14 @@ shout() { echo "${0##*/}: $*" >&2; }
 
 USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
-USER=
+USERNAME=
 PORT=
 
 while [ "$1" != "" ]; do
     case $1 in
-        -u | --user )
+        -u | --username )
             shift
-            USER=$1
+            USERNAME=$1
             ;;
         -p | --port )
             shift
@@ -32,42 +32,48 @@ while [ "$1" != "" ]; do
     shift
 done
 
-[ "$USER" ] || usage
+[ "$USERNAME" ] || usage
 [ "$PORT" ] || usage
 
 safe echo "server {
     listen $PORT;
-    access_log /var/log/nginx/hatchery.$USER.access.log;
-    error_log /var/log/nginx/hatchery.$USER.error.log;
+    access_log /var/log/nginx/hatchery.$USERNAME.access.log;
+    error_log /var/log/nginx/hatchery.$USERNAME.error.log;
 
     # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-production
     location /static/ { # STATIC_URL
-        alias /home/$USER/project/static/; # STATIC_ROOT
+        alias /home/$USERNAME/project/static/; # STATIC_ROOT
         expires 1d;
     }
 
+    location /static/admin/ {
+        alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin/;
+        expires 30d;
+    }
+
     location /media/ { # MEDIA_URL
-        alias /home/$USER/project/media/; # MEDIA_ROOT
+        alias /home/$USERNAME/project/media/; # MEDIA_ROOT
         expires 1d;
     }
 
     location / {
         include fastcgi_params;
-        fastcgi_pass unix:/var/run/hatchery/$USER;
+        fastcgi_split_path_info ^()(.*)$;
+        fastcgi_pass unix:/var/run/hatchery/$USERNAME;
     }
 }
-" | sudo tee /etc/nginx/sites-available/$USER > /dev/null
+" | sudo tee /etc/nginx/sites-available/$USERNAME > /dev/null
 
 
-FILENAME="/etc/nginx/sites-enabled/$USER"
+FILENAME="/etc/nginx/sites-enabled/$USERNAME"
 
 if [ -e "$FILENAME" ]; then
     safe sudo rm "$FILENAME"
 fi
 
-safe sudo ln -s /etc/nginx/sites-available/$USER "$FILENAME"
+safe sudo ln -s /etc/nginx/sites-available/$USERNAME "$FILENAME"
 
-echo "Created configuration for user $USER on port $PORT"
+echo "Created configuration for user $USERNAME on port $PORT"
 
 safe sudo service nginx restart
 
