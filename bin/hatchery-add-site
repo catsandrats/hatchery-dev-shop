@@ -35,12 +35,12 @@ while [ "$1" != "" ]; do
     shift
 done
 
-[ "$USERNAME" ] || usage
-[ "$PORT" ] || usage
+[ "$USERNAME" ] || barf $USAGE
+[ "$PORT" ] || barf $USAGE
 
 safe sudo cp $SCRIPTPATH/../etc/nginx/site /etc/nginx/sites-available/$USERNAME
-safe sudo sed -i 's/REPLACE_USERNAME/$USERNAME/g' /etc/nginx/sites-available/$USERNAME
-safe sudo sed -i 's/REPLACE_PORT/$PORT/g' /etc/nginx/sites-available/$USERNAME
+safe sudo sed -i "s/REPLACE_USERNAME/$USERNAME/g" /etc/nginx/sites-available/$USERNAME
+safe sudo sed -i "s/REPLACE_PORT/$PORT/g" /etc/nginx/sites-available/$USERNAME
 
 FILENAME="/etc/nginx/sites-enabled/$USERNAME"
 

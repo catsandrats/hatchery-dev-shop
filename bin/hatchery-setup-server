@@ -43,7 +43,7 @@ safe echo "$DB_SERVER hatcherydb" | sudo tee /etc/hosts > /dev/null
 
 # setup profile
 safe sudo cp ./etc/profile.d/environment.sh /etc/profile.d/environment.sh
-safe sudo sed -i 's/REPLACE_DB_SERVER/$DB_SERVER/g' /etc/profile.d/environment.sh
+safe sudo sed -i "s/REPLACE_DB_SERVER/$DB_SERVER/g" /etc/profile.d/environment.sh
 
 safe sudo -s chmod a+x /etc/profile.d/environment.sh
 safe . /etc/profile.d/environment.sh
