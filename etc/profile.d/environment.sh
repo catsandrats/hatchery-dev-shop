@@ -9,6 +9,5 @@ export HISTFILESIZE=10000
 export HISTCONTROL=erasedups
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
-export DB_SERVER=REPLACE_DB_SERVER
 export DJANGO_SOCKET=/var/run/hatchery/$USER
 alias runserver="./manage.py runfcgi socket=$DJANGO_SOCKET umask=0002 method=prefork daemonize=false"

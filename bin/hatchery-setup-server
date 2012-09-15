@@ -9,17 +9,12 @@ shout() { echo "${0##*/}: $*" >&2; }
 
 # some default settings
 OLD_DIR=`pwd`
-DB_SERVER=
 RUN_DIR="/var/run/hatchery"
 
-USAGE="$0 [[[-d dbserver] [-r rundir]] | [-h]]"
+USAGE="$0 [-r rundir | -h]"
 
 while [ "$1" != "" ]; do
     case $1 in
-        -d | --dbserver )
-            shift
-            DB_SERVER=`dig +short $1 | tac | awk 'NR > 1 { exit } ; 1'`
-            ;;
         -r | --rundir )
             shift
             RUN_DIR=$1
@@ -34,18 +29,12 @@ while [ "$1" != "" ]; do
     shift
 done
 
-[ "$RUN_DIR" ] || usage
-[ "$DB_SERVER" ] || usage
+[ "$RUN_DIR" ] || barf $USAGE
 
 # configure environment profile for all users
-# setup hosts
-safe echo "$DB_SERVER hatcherydb" | sudo tee /etc/hosts > /dev/null
-
 # setup profile
 safe sudo cp ./etc/profile.d/environment.sh /etc/profile.d/environment.sh
 safe sudo sed -i "s/REPLACE_DB_SERVER/$DB_SERVER/g" /etc/profile.d/environment.sh
-
-safe sudo -s chmod a+x /etc/profile.d/environment.sh
 safe . /etc/profile.d/environment.sh
 
 # update software installed on box
