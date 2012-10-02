@@ -9,38 +9,38 @@ shout() { echo "${0##*/}: $*" >&2; }
 
 USAGE="$0 [[[-u username] [-p port]] | [-h]]"
 
-SCRIPT=`readlink -f $0`
-SCRIPTPATH=`dirname $SCRIPT`
+SCRIPT="`readlink -f $0`"
+SCRIPTPATH="`dirname $SCRIPT`"
 
 USERNAME=
 PORT=
 
 while [ "$1" != "" ]; do
-    case $1 in
+    case "$1" in
         -u | --username )
             shift
-            USERNAME=$1
+            USERNAME="$1"
             ;;
         -p | --port )
             shift
-            PORT=$1
+            PORT="$1"
             ;;
         -h | --help )
-            shout $USAGE
+            shout "$USAGE"
             exit 0
             ;;
         * )
-            barf $USAGE
+            barf "$USAGE"
     esac
     shift
 done
 
-[ "$USERNAME" ] || barf $USAGE
-[ "$PORT" ] || barf $USAGE
+[ "$USERNAME" ] || barf "$USAGE"
+[ "$PORT" ] || barf "$USAGE"
 
-safe sudo cp $SCRIPTPATH/../etc/nginx/site /etc/nginx/sites-available/$USERNAME
-safe sudo sed -i "s/REPLACE_USERNAME/$USERNAME/g" /etc/nginx/sites-available/$USERNAME
-safe sudo sed -i "s/REPLACE_PORT/$PORT/g" /etc/nginx/sites-available/$USERNAME
+safe sudo cp "$SCRIPTPATH/../etc/nginx/site" "/etc/nginx/sites-available/$USERNAME"
+safe sudo sed -i "s/REPLACE_USERNAME/$USERNAME/g" "/etc/nginx/sites-available/$USERNAME"
+safe sudo sed -i "s/REPLACE_PORT/$PORT/g" "/etc/nginx/sites-available/$USERNAME"
 
 FILENAME="/etc/nginx/sites-enabled/$USERNAME"
 
@@ -48,7 +48,7 @@ if [ -e "$FILENAME" ]; then
     safe sudo rm "$FILENAME"
 fi
 
-safe sudo ln -s /etc/nginx/sites-available/$USERNAME "$FILENAME"
+safe sudo ln -s "/etc/nginx/sites-available/$USERNAME" "$FILENAME"
 
 echo "Created configuration for user $USERNAME on port $PORT"
 
