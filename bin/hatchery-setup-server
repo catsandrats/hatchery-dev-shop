@@ -53,7 +53,7 @@ safe sudo rm -rf django-1.4.1.tar.gz
 safe cd $OLD_DIR
 
 # setup fcgi socket run directory
-if [ -d $RUN_DIR ]; then
+if [ -e $RUN_DIR ]; then
     safe sudo rm -rf $RUN_DIR
 fi
 safe sudo mkdir $RUN_DIR
