@@ -45,12 +45,12 @@ done
 
 # create the user
 id "$USER" > /dev/null 2>&1
-if [ "$?" ]; then
+if [ ! "$?" ]; then
     if [ ! "$FORCE" ]; then
         barf "User $USER already exists"
     fi
 else
-    safe sudo adduser --disabled-password --ingroup hatchery "$USER"
+    safe sudo useradd --groups hatchery --create-home "$USER"
 fi
 
 PROJECT_DIR="/home/$USER/project"
@@ -73,4 +73,4 @@ shout "Created project in /home/$USER/project/ with sqlite database"
 shout "Be sure to run python manage.py createsuperuser to create a new superuser for the project"
 
 # execute nginx-config
-safe "$SCRIPTPATH/hatchery-add-site" -u "$USER" -p "$PORT"
+safe "$SCRIPTPATH/add-site" -u "$USER" -p "$PORT"
