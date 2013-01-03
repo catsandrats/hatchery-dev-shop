@@ -2,7 +2,7 @@ import os
 import os.path
 import sys
 
-PROJECT_PATH = os.path.abspath(os.path.split(os.path.split(__file__)[0])[0])
+PROJECT_PATH = os.path.abspath(os.path.split(__file__)[0])
 APPSERVER = os.uname()[1]
 
 DEBUG = True
@@ -13,10 +13,12 @@ ADMINS = (
 )
 MANAGERS = ADMINS
 
+DEFAULT_FROM_EMAIL = 'hatchery@example.com'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(PROJECT_PATH, 'sqlite.db'),
+        'NAME': os.path.join(PROJECT_PATH, 'project.db'),
     }
 }
 
@@ -26,12 +28,19 @@ LANGUAGE_CODE = 'en-us'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+APPEND_SLASH = True
+
+LOGIN_REDIRECT_URL = '/'
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 MEDIA_ROOT = os.path.join(PROJECT_PATH, 'media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(PROJECT_PATH, 'static')
+STATIC_ROOT = os.path.join(PROJECT_PATH, 'static-collected')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = ()
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_PATH, 'static'),
+)
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -54,9 +63,19 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (os.path.join(PROJECT_PATH, 'templates'),)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.contrib.messages.context_processors.messages',
+    'django.core.context_processors.request',
+)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -94,5 +113,8 @@ LOGGING = {
         'django.request': {
             'handlers': ['mail_admins'], 'level': 'ERROR', 'propagate': False,
         },
+#        'django.db.backends': {
+#            'handlers': ['console'], 'level': 'WARNING', 'propagate': True,
+#        }
     }
 }

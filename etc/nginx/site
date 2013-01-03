@@ -6,7 +6,7 @@ server {
     # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-production
     location /static/ {
         alias /home/REPLACE_USERNAME/project/static/;
-        expires 1d;
+        expires 1s;
     }
 
     location /static/admin/ {
@@ -16,12 +16,12 @@ server {
 
     location /media/ {
         alias /home/REPLACE_USERNAME/project/media/;
-        expires 1d;
+        expires 1s;
     }
 
     location / {
         include fastcgi_params;
         fastcgi_split_path_info ^()(.*)$;
-        fastcgi_pass unix:/var/run/hatchery/REPLACE_USERNAME;
+        fastcgi_pass localhost:REPLACE_INTERNAL_PORT;
     }
 }

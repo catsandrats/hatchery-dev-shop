@@ -7,13 +7,14 @@ safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
 shout() { echo "${0##*/}: $*" >&2; }
 
-USAGE="$0 [[[-u username] [-p port]] | [-h]]"
+USAGE="$0 [[[-u username] [-p port] [-i internal port]] | [-h]]"
 
 SCRIPT="`readlink -f $0`"
 SCRIPTPATH="`dirname $SCRIPT`"
 
 USERNAME=
 PORT=
+INTERNAL_PORT=
 
 while [ "$1" != "" ]; do
     case "$1" in
@@ -24,6 +25,10 @@ while [ "$1" != "" ]; do
         -p | --port )
             shift
             PORT="$1"
+            ;;
+        -i | --internal-port )
+            shift
+            INTERNAL_PORT="$1"
             ;;
         -h | --help )
             shout "$USAGE"
@@ -37,10 +42,13 @@ done
 
 [ "$USERNAME" ] || barf "$USAGE"
 [ "$PORT" ] || barf "$USAGE"
+[ "$INTERNAL_PORT" ] || barf "$USAGE"
 
 safe sudo cp "$SCRIPTPATH/../etc/nginx/site" "/etc/nginx/sites-available/$USERNAME"
 safe sudo sed -i "s/REPLACE_USERNAME/$USERNAME/g" "/etc/nginx/sites-available/$USERNAME"
 safe sudo sed -i "s/REPLACE_PORT/$PORT/g" "/etc/nginx/sites-available/$USERNAME"
+safe sudo sed -i "s/REPLACE_PORT/$REPLACE_INTERNAL_PORT/g" "/etc/nginx/sites-available/$USERNAME"
+
 
 FILENAME="/etc/nginx/sites-enabled/$USERNAME"
 

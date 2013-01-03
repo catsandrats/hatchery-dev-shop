@@ -11,5 +11,10 @@ export HISTFILESIZE=10000
 export HISTCONTROL=erasedups
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
-export DJANGO_SOCKET=/var/run/hatchery/$USER
-alias runserver="./manage.py runfcgi socket=$DJANGO_SOCKET umask=0002 method=prefork daemonize=false"
+export PORT=`grep $USER /etc/profile.d/ports | awk '{print $2}'`
+export NGINX_PORT=`grep $USER /etc/profile.d/nginx_ports | awk '{print $2}'`
+alias runserver="bash -c \"cd ~$USER/project; ./manage.py runfcgi method=threaded daemonize=false host=localhost port=$PORT\""
+
+echo "********************************************************"
+echo "* Hatchery Server: http://dev.hatcherydevshop.com/$USER/"
+echo "********************************************************"

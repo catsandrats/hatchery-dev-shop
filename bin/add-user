@@ -7,7 +7,7 @@ safe() { "$@" || barf "cannot: $*; aborting"; }
 barf() { shout "$*"; exit 111; }
 shout() { echo "${0##*/}: $*" >&2; }
 
-USAGE="$0 [[[-f] [-u username] [-p port]] | [-h]]"
+USAGE="$0 [[[-f] [-u username] [-p port] [-i internal port]] | [-h]]"
 
 SCRIPT="`readlink -f $0`"
 SCRIPTPATH="`dirname $SCRIPT`"
@@ -15,6 +15,7 @@ SCRIPTPATH="`dirname $SCRIPT`"
 OLDDIR="`pwd`"
 USER=
 PORT=
+INTERNAL_PORT=
 FORCE=
 
 while [ "$1" != "" ]; do
@@ -26,6 +27,10 @@ while [ "$1" != "" ]; do
         -p | --port )
             shift
             PORT="$1"
+            ;;
+        -i | --internal-port )
+            shift
+            INTERNAL_PORT="$1"
             ;;
         -f | --force )
             FORCE=1
@@ -42,6 +47,7 @@ done
 
 [ "$USER" ] || barf "$USAGE"
 [ "$PORT" ] || barf "$USAGE"
+[ "$INTERNAL_PORT" ] || barf "$USAGE"
 
 # create the user
 id "$USER" > /dev/null 2>&1
@@ -51,6 +57,7 @@ if [ ! "$?" ]; then
     fi
 else
     safe sudo useradd --groups hatchery --create-home "$USER"
+    safe sudo chsh -s /bin/bash "$USER"
 fi
 
 PROJECT_DIR="/home/$USER/project"
@@ -58,19 +65,32 @@ PROJECT_DIR="/home/$USER/project"
 # create the django project
 SECRET_KEY="`date +%s | openssl sha256 | base64 | head -c 50`"
 safe cd "/home/$USER"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/gitconfig" ".gitconfig"
+safe sudo sed -i "s/REPLACE_USER/$USER/g" ".gitconfig"
+shout "Created .gitconfig"
 safe sudo -u "$USER" env django-admin.py startproject project
-safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/urls.py" "$PROJECT_DIR/project/urls.py"
-safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/settings.py" "$PROJECT_DIR/project/settings.py"
-safe sudo sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/g" "$PROJECT_DIR/project/settings.py"
+shout "Created project"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/urls.py" "$PROJECT_DIR/urls.py"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/settings.py" "$PROJECT_DIR/settings.py"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/gitignore" "$PROJECT_DIR/.gitignore"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/wsgi.py" "$PROJECT_DIR/wsgi.py"
+safe sudo -u "$USER" cp "$SCRIPTPATH/../etc/project/manage.py" "$PROJECT_DIR/manage.py"
+safe sudo sed -i "s/REPLACE_SECRET_KEY/$SECRET_KEY/g" "$PROJECT_DIR/settings.py"
 safe sudo -u "$USER" mkdir "$PROJECT_DIR/media"
 safe sudo -u "$USER" mkdir "$PROJECT_DIR/static"
 safe sudo -u "$USER" mkdir "$PROJECT_DIR/templates"
+shout "Setting up project"
 safe cd "/home/$USER/project"
 safe sudo -u "$USER" python manage.py syncdb --noinput 2>&1 > /dev/null
+shout "Syncing database"
 safe cd "$OLDDIR"
+
+safe echo "$USER $INTERNAL_PORT" | sudo tee -a /etc/profile.d/nginx_ports > /dev/null
+safe echo "$USER $PORT" | sudo tee -a /etc/profile.d/ports > /dev/null
+shout "Added user ports to profile.d"
 
 shout "Created project in /home/$USER/project/ with sqlite database"
 shout "Be sure to run python manage.py createsuperuser to create a new superuser for the project"
 
 # execute nginx-config
-safe "$SCRIPTPATH/add-site" -u "$USER" -p "$PORT"
+safe "$SCRIPTPATH/add-site" -u "$USER" -p "$PORT" -i "$INTERNAL_PORT"
